@@ -6,8 +6,9 @@ using System.Collections;
 /// </summary>
 
 public enum IN_STATE{	//The different states of the input.
-	SELECTING,		//Touching an object to select it.
-	CAMERA,			//Touching the screen to control the camera.
+	UI,					//Interacting with the UI.
+	SELECTING,			//Touching an object to select it.
+	CAMERA,				//Touching the screen to control the camera.
 	NONE
 };
 
@@ -49,6 +50,8 @@ public class IN_InputHandler:MonoBehaviour{
 	public void SetInState(IN_STATE _inState){
 		//Changes the current state of the input.
 		inState=_inState;
+
+		if(inState!=IN_STATE.CAMERA) scripts.cam_Camera.SetCamInputState(CAM_INPUT_STATE.NONE);
 	}
 	public void DeselectObject(){
 		//Deselects the current object.

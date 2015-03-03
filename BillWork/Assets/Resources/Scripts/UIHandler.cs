@@ -58,19 +58,23 @@ public class UIHandler:MonoBehaviour{
 		if(MainMenu.GetComponent<CanvasGroup>().alpha==1)
 			ShowHideCanvasGroup(MainMenu,false,false,false);
 		else{
+			scripts.in_InputHandler.SetInState(IN_STATE.UI);
 			HideGroups(1);
 			ShowHideCanvasGroup(MainMenu, true, true, true);
 		}
 	}
 	public void Button_Camera(){
 		//Camera button hit.
-		scripts.in_InputHandler.SetInState(IN_STATE.CAMERA);	//Set the input state to CAMERA.
-		if(CameraMenu.GetComponent<CanvasGroup>().alpha==1)
+		if(CameraMenu.GetComponent<CanvasGroup>().alpha==1){
+			scripts.in_InputHandler.SetInState(IN_STATE.UI);
 			ShowHideCanvasGroup(CameraMenu,false,false,false);
+		}
 		else{
+			scripts.in_InputHandler.SetInState(IN_STATE.UI);
 			HideGroups(1);
 			ShowHideCanvasGroup(CameraMenu, true, true, true);
 		}
+		scripts.in_InputHandler.SetInState(IN_STATE.CAMERA);	//Set the input state to CAMERA.
 	}
 	public void Button_Select(){
 		//Select button hit.
@@ -87,6 +91,7 @@ public class UIHandler:MonoBehaviour{
 		if(LayersMenu.GetComponent<CanvasGroup>().alpha==1)
 			ShowHideCanvasGroup(LayersMenu,false,false,false);
 		else{
+			scripts.in_InputHandler.SetInState(IN_STATE.UI);
 			HideGroups(1);
 			ShowHideCanvasGroup(LayersMenu, true, true, true);
 		}
