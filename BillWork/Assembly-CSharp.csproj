@@ -61,6 +61,7 @@
      <Compile Include="Assets\Resources\Scripts\UI_LayersMenuHandler.cs" />
      <Compile Include="Assets\Resources\Scripts\UI_ObjectMenuHandler.cs" />
      <Compile Include="Assets\Resources\Scripts\UTIL_Scripts.cs" />
+     <Compile Include="Assets\Resources\Scripts\UTIL_ToggleFader.cs" />
      <Compile Include="Assets\Resources\Scripts\UTIL_UVMover.cs" />
      <Compile Include="Assets\Resources\Scripts\UTIL_Utilities.cs" />
      <None Include="Assets\Resources\Shaders\DiffuseNormal_NoCull.shader" />
