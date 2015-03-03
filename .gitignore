@@ -163,3 +163,7 @@ BillWork/Assets/Resources/Models/Eye/Textures/Unused_EyeTexture.jpg.meta
 BillWork/Assets/Resources/Models/Eye/Textures/Unused_MapTexture.png
 BillWork/Assets/Resources/Models/Eye/Textures/Unused_MapTexture.png.meta
 BillWork/Library/metadata/*
+BillWork/Assets/Resources/Models/Eye/eyeFBX.fbx
+BillWork/Assets/Resources/Models/Eye/eyeFBX.fbx.meta
+BillWork/Assets/Resources/Models/Eye/Materials/TextureIris.mat
+BillWork/Assets/Resources/Models/Eye/Materials/TextureIris.mat.meta

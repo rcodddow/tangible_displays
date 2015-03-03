@@ -73,7 +73,7 @@
  <HintPath>C:/Program Files (x86)/Unity/Editor/Data/UnityExtensions/Unity/GUISystem/4.6.1/UnityEngine.UI.dll</HintPath>
  </Reference>
  <Reference Include="websocket-sharp">
- <HintPath>C:/Users/Rob/Desktop/unity_tablet_tabletop/BillWork/Assets/Plugins/websocket-sharp.dll</HintPath>
+ <HintPath>C:/Users/Rob/Desktop/newgit/tangible_displays/BillWork/Assets/Plugins/websocket-sharp.dll</HintPath>
  </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
