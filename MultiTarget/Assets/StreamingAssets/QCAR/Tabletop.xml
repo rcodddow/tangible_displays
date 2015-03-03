@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<QCARConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="qcar_config.xsd">
+  <Tracking>
+    <ImageTarget name="widebrick" size="25.400000 6.350000" />
+    <ImageTarget name="wideforest" size="25.400000 6.350000" />
+    <ImageTarget name="widestones" size="25.400000 7.461444" />
+    <ImageTarget name="extended" size="25.299999 6.325000" />
+    <ImageTarget name="uoit" size="10.000000 10.000000" />
+    <ImageTarget name="shizuoka" size="10.000000 10.000000" />
+    <ImageTarget name="lassonde" size="10.000000 10.000000" />
+    <ImageTarget name="granada" size="10.000000 10.000000" />
+<MultiTarget name="TableTop">
+      <Part name="extended" translation="45.7 0 0" rotation="AD: 1 0 0 0"/>
+      <Part name="widebrick" translation="90 30 0" rotation="AD: 0 0 1 90"/>
+      <Part name="widestones" translation="50 58 0" rotation="AD: 1 0 0 0"/>
+      <Part name="wideforest" translation="3.4 28.9 0" rotation="AD: 0 0 1 90"/>
+    </MultiTarget>
+  </Tracking>
+</QCARConfig>
