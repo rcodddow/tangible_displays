@@ -10,27 +10,21 @@ using Boo.Lang.Compiler.Pipelines;
 
 public class ScenarioLoader {
 
-	private static string scenarioFile = "scenario.xml";
-
-	enum SceneType { TabletScene, TableTopScene };
+	public enum SceneType { TabletScene, TableTopScene };
 
 	SceneType _type;
 
-	public ScenarioLoader(SceneType type) {
-		_type = type;
-	}
+	private Scenario _scenario;
 
-	// Use this for initialization
-	void Start () {
+	public ScenarioLoader(SceneType type, string file) {
+		_type = type;
+
 		XmlSerializer deserializer = new XmlSerializer(typeof(Scenario));
 
-		TextReader textReader = new StreamReader(scenarioFile);
+		TextReader textReader = new StreamReader(file);
 		Scenario scenario = (Scenario)deserializer.Deserialize(textReader);
 		textReader.Close();
 	}
-	
-	// Update is called once per frame
-	void Update () {
-	
-	}
+
+	public 
 }
