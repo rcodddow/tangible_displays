@@ -12,6 +12,7 @@ public class UTIL_Scripts:MonoBehaviour{
 	public IN_InputHandler in_InputHandler;
 	public CAM_Camera cam_Camera;
 	public NET_Handler net_Handler;
+	public MainHandler mainHandler;
 
 	void Start(){
 	}

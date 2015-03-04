@@ -29,6 +29,5 @@ public class UTIL_ToggleFader:MonoBehaviour{
 			else GetComponent<Image>().color=colorOff;
 			updated=false;
 		}
-
 	}
 }

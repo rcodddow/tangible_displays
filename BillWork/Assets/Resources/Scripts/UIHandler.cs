@@ -26,29 +26,15 @@ public class UIHandler:MonoBehaviour{
 
 	public void SelectObject(GameObject _object){
 		//An object has been selected. Show the ObjectMenu.
-		ShowHideCanvasGroup(ObjectMenu, true, true, true);
+		UTIL_Utilities.ShowHideCanvasGroup(ObjectMenu, true, true, true);
 	}
 
-	private void ShowHideCanvasGroup(GameObject _canvasGroup, bool _show, bool _interactable, bool _blocksRaycasts){
-		//Show or hide a CanvasGroup as well as set it's interactability.
-		CanvasGroup tmp=_canvasGroup.GetComponent<CanvasGroup>();
-		if(tmp==null){
-			Debug.Log("Can't call ShowHideCanvasGroup on \""+_canvasGroup.name+"\" as no CanvasGroup is attached.");
-			return;
-		}
-
-		if(_show) tmp.alpha=1;
-		else tmp.alpha=0;
-
-		tmp.interactable=_interactable;
-		tmp.blocksRaycasts=_blocksRaycasts;
-	}
 	private void HideGroups(int _group){
 		//Hides a group of menus.
 		if(_group==1){	//MainMenu, CameraMenu, LayersMenu
-			ShowHideCanvasGroup(MainMenu,false,false,false);
-			ShowHideCanvasGroup(CameraMenu,false,false,false);
-			ShowHideCanvasGroup(LayersMenu,false,false,false);
+			UTIL_Utilities.ShowHideCanvasGroup(MainMenu,false,false,false);
+			UTIL_Utilities.ShowHideCanvasGroup(CameraMenu,false,false,false);
+			UTIL_Utilities.ShowHideCanvasGroup(LayersMenu,false,false,false);
 		}
 	}
 
@@ -57,23 +43,23 @@ public class UIHandler:MonoBehaviour{
 	public void Button_Menu(){
 		//Menu button hit.
 		if(MainMenu.GetComponent<CanvasGroup>().alpha==1)
-			ShowHideCanvasGroup(MainMenu,false,false,false);
+			UTIL_Utilities.ShowHideCanvasGroup(MainMenu,false,false,false);
 		else{
 			scripts.in_InputHandler.SetInState(IN_STATE.UI);
 			HideGroups(1);
-			ShowHideCanvasGroup(MainMenu, true, true, true);
+			UTIL_Utilities.ShowHideCanvasGroup(MainMenu, true, true, true);
 		}
 	}
 	public void Button_Camera(){
 		//Camera button hit.
 		if(CameraMenu.GetComponent<CanvasGroup>().alpha==1){
 			scripts.in_InputHandler.SetInState(IN_STATE.UI);
-			ShowHideCanvasGroup(CameraMenu,false,false,false);
+			UTIL_Utilities.ShowHideCanvasGroup(CameraMenu,false,false,false);
 		}
 		else{
 			scripts.in_InputHandler.SetInState(IN_STATE.UI);
 			HideGroups(1);
-			ShowHideCanvasGroup(CameraMenu, true, true, true);
+			UTIL_Utilities.ShowHideCanvasGroup(CameraMenu, true, true, true);
 		}
 		scripts.in_InputHandler.SetInState(IN_STATE.CAMERA);	//Set the input state to CAMERA.
 	}
@@ -84,29 +70,33 @@ public class UIHandler:MonoBehaviour{
 		else{	//If already in selecting mode, get out of it.
 			scripts.in_InputHandler.SetInState(IN_STATE.NONE);
 			scripts.in_InputHandler.DeselectObject();
-			ShowHideCanvasGroup(ObjectMenu, false, false, false);
+			UTIL_Utilities.ShowHideCanvasGroup(ObjectMenu, false, false, false);
 		}
 	}
 	public void Button_Layers(){
 		//Layers button hit.
 		if(LayersMenu.GetComponent<CanvasGroup>().alpha==1)
-			ShowHideCanvasGroup(LayersMenu,false,false,false);
+			UTIL_Utilities.ShowHideCanvasGroup(LayersMenu,false,false,false);
 		else{
 			scripts.in_InputHandler.SetInState(IN_STATE.UI);
 			HideGroups(1);
-			ShowHideCanvasGroup(LayersMenu, true, true, true);
+			UTIL_Utilities.ShowHideCanvasGroup(LayersMenu, true, true, true);
 		}
 	}
 	public void Button_DebugMenu(){
 		//DebugMenu button hit.
 		if(DebugMenu.GetComponent<CanvasGroup>().alpha==1)
-			ShowHideCanvasGroup(DebugMenu,false,false,false);
-		else ShowHideCanvasGroup(DebugMenu, true, false, false);
+			UTIL_Utilities.ShowHideCanvasGroup(DebugMenu,false,false,false);
+		else UTIL_Utilities.ShowHideCanvasGroup(DebugMenu, true, false, false);
 	}
 	//MainMenu
 	public void Button_Reset(){
 		//Reset button hit. Reload the level.
 		Application.LoadLevel(Application.loadedLevel);
+	}
+	public void Button_Scope(){
+		//Scope button hit. Switch to the scope activity.
+		scripts.mainHandler.SetGameMode(GAME_MODE.SCOPE);
 	}
 	//CameraMenu
 	public void Button_Translate(){

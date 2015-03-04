@@ -80,4 +80,26 @@ public static class UTIL_Utilities{
 			for(int i=0; i<_object.transform.childCount; i++)
 				RemoveHighlight(_object.transform.GetChild(i).transform.gameObject, _children);
 	}
+	public static void ShowHideCanvasGroup(GameObject _canvasGroup, bool _show, bool _interactable, bool _blocksRaycasts){
+		//Show or hide a CanvasGroup as well as set it's interactability.
+		CanvasGroup tmp=_canvasGroup.GetComponent<CanvasGroup>();
+		if(tmp==null){
+			Debug.Log("Can't call ShowHideCanvasGroup on \""+_canvasGroup.name+"\" as no CanvasGroup is attached.");
+			return;
+		}
+
+		ShowHideCanvasGroup(tmp, _show, _interactable, _blocksRaycasts);
+	}
+	public static void ShowHideCanvasGroup(CanvasGroup _canvasGroup, bool _show, bool _interactable, bool _blocksRaycasts){
+		if(_canvasGroup==null){
+			Debug.Log("Can't call ShowHideCanvasGroup on a null CanvasGroup.");
+			return;
+		}
+
+		if(_show) _canvasGroup.alpha=1;
+		else _canvasGroup.alpha=0;
+
+		_canvasGroup.interactable=_interactable;
+		_canvasGroup.blocksRaycasts=_blocksRaycasts;
+	}
 }

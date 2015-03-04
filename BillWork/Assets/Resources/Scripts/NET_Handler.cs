@@ -11,9 +11,9 @@ public class NET_Handler:MonoBehaviour{
 	public UTIL_Scripts scripts;
 
 	void Start(){
-		conn = COMServerConnection.Instance;
-		conn.Port = 9090;
-		conn.Connect();
+		//conn=COMServerConnection.Instance;
+		//conn.Port=9090;
+		//conn.Connect();
 
 		net_TableState=new NET_TableState(scripts.ui_LayersMenuHandler.root);	//Create the TableState.
 	}
@@ -21,7 +21,7 @@ public class NET_Handler:MonoBehaviour{
 	void Update(){
 		//Update the different net handlers.
 		net_TableState.Update();
-		SendBroadcast();
+		//SendBroadcast();
 	}
 	private void SendBroadcast(){
 		//Send out the broadcast messages.
