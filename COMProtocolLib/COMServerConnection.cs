@@ -1,10 +1,15 @@
 ﻿using System.Collections.Generic;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Reflection;
+using System.Linq;
+
 using System;
-using WebSocketSharp;
-using WebSocketSharp.Net;
-using WebSocketSharp.Server;
+using System.IO;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
+
 using SimpleJSON;
 using UnityEngine;
 
@@ -61,33 +66,6 @@ namespace COMProtocolLib {
 			}
 		};
 
-		public class Unity : WebSocketBehavior
-		{
-			protected override void OnMessage(MessageEventArgs e)
-			{
-				string s = e.Data;
-				if ((s != null) && !s.Equals ("")) {
-					JSONNode node = JSONNode.Parse (s);
-
-					string operation = node["op"];
-					Type type = Type.GetType(node["type"]);
-					ConstructorInfo constructor = type.GetConstructor(new Type[] { typeof(JSONNode) });
-
-					if (constructor == null) {
-						Debug.Log("could not find proper contruction in type : " + node["type"]);
-						return;
-					}
-
-					COMServerConnection conn = COMServerConnection.Instance;
-
-					foreach (COMServerDelegate _delegate in conn.getDelegates()) {
-						COMMessage message = (COMMessage) constructor.Invoke(new object[] { node["msg"] });
-						conn.AddTaskToQueue(new RenderTask (_delegate, ID, operation, message));
-					}
-				}
-			}
-		}
-
 		private static COMServerConnection instance;
 		
 		public static COMServerConnection Instance
@@ -108,14 +86,17 @@ namespace COMProtocolLib {
 		 */
 		public COMServerConnection() {
 			_port = 9090;
-			_myThread = null;
+			_listenerThread = null;
 		}
 
-		private WebSocketServer _ws;
+		private TcpListener _server;
+
+		private ConcurrentDictionary<string, NetworkStream> _client = new ConcurrentDictionary<string, NetworkStream>(); 
 
 		private List<COMServerDelegate> _delegates = new List<COMServerDelegate>();
 		
-		private System.Threading.Thread _myThread;
+		private System.Threading.Thread _listenerThread;
+
 		private List<RenderTask> _taskQ = new List<RenderTask>();
 		
 		private object _queueLock = new object ();
@@ -127,7 +108,7 @@ namespace COMProtocolLib {
 			}
 			set {
 				if (value != _port) {
-					if (_myThread != null && _myThread.IsAlive == true) {
+					if (_listenerThread != null && _listenerThread.IsAlive == true) {
 						Disconnect();
 					}
 				}
@@ -150,9 +131,9 @@ namespace COMProtocolLib {
 		 * Connect to the remote ros environment.
 		 */
 		public void Connect() {
-			if (_myThread == null || _myThread.IsAlive == false) {
-				_myThread = new System.Threading.Thread (Run);
-				_myThread.Start ();
+			if (_listenerThread == null || _listenerThread.IsAlive == false) {
+				_listenerThread = new System.Threading.Thread (ConnnectionListener);
+				_listenerThread.Start ();
 			}
 		}
 
@@ -160,20 +141,96 @@ namespace COMProtocolLib {
 		 * Disconnect from the remote ros environment.
 		 */
 		public void Disconnect() {
-			if (_myThread != null && _myThread.IsAlive == true) {
-				_myThread.Abort ();
-				_ws.Stop ();
+			if (_listenerThread != null && _listenerThread.IsAlive == true) {
+				_listenerThread.Abort ();
+				_server.Stop();
 			}
 		}
 
-		private void Run() {
-			_ws = new WebSocketServer(_port);
-			_ws.AddWebSocketService<Unity> ("/");
+		private void ConnnectionListener() {
 
-			_ws.Start();
+			_server = new TcpListener(IPAddress.Parse("127.0.0.1"), _port);
+			_server.Start();
 
-			while(true) {
-				Thread.Sleep (10000);
+			while (true) {
+				TcpClient client = _server.AcceptTcpClient();
+				Thread clientThread = new Thread(new ParameterizedThreadStart(ConnectionHandler));
+				clientThread.Start(client);
+			}
+		}
+
+		private void ConnectionHandler(object client) {
+
+			TcpClient tcpClient = (TcpClient)client;
+			NetworkStream clientStream = tcpClient.GetStream();
+
+			string identifier = RandomString(32); 
+
+			_client.Add (identifier, clientStream);
+
+			string message = "";
+			
+			int bytesRead;
+			byte[] buffer = new byte[4096];
+			
+			while (true)
+			{
+				bytesRead = 0;
+				
+				try {
+					//blocks until a client sends a message
+					bytesRead = clientStream.Read(buffer, 0, 4096);
+				} catch {
+					//a socket error has occured
+					break;
+				}
+				
+				if (bytesRead == 0) {
+					//the client has disconnected from the server
+					break;
+				}
+
+				int frag_size = 0;
+				while (frag_size < bytesRead) {
+					if (buffer[frag_size++] == '\n')
+						break;
+				}
+
+				ASCIIEncoding encoder = new ASCIIEncoding();
+				message += encoder.GetString(buffer, 0, frag_size);
+
+				if (frag_size < bytesRead) { // recieved complete JSON string
+					OnMessage(message, identifier);
+
+					if (bytesRead - frag_size > 1) {
+						message = encoder.GetString(buffer, frag_size, bytesRead - frag_size);
+					}
+				}
+			}
+
+			_client.Remove (identifier);
+			
+			tcpClient.Close();
+		}
+
+		private void OnMessage(string s, string id)
+		{
+			if ((s != null) && !s.Equals ("")) {
+				JSONNode node = JSONNode.Parse (s);
+				
+				string operation = node["op"];
+				Type type = Type.GetType(node["type"]);
+				ConstructorInfo constructor = type.GetConstructor(new Type[] { typeof(JSONNode) });
+				
+				if (constructor == null) {
+					Debug.Log("could not find proper contruction in type : " + node["type"]);
+					return;
+				}
+				
+				foreach (COMServerDelegate _delegate in _delegates) {
+					COMMessage message = (COMMessage) constructor.Invoke(new object[] { node["msg"] });
+					AddTaskToQueue(new RenderTask (_delegate, id, operation, message));
+				}
 			}
 		}
 
@@ -192,33 +249,34 @@ namespace COMProtocolLib {
 		}
 
 		public void Broadcast(String operation, COMMessage msg) {
-			if(_ws != null) {
 
-				WebSocketServiceManager services = _ws.WebSocketServices;
-				
-				WebSocketServiceHost host = services["/"];
-				
-				WebSocketSessionManager sessions = host.Sessions;
+			ASCIIEncoding encoder = new ASCIIEncoding();
 
-				string s = "{";
-				s += "\"op\": \"" + operation + "\"";
-				s += "," + "\"type\": \"" + msg.GetType().ToString() + "\"";
-				s += "," + "\"msg\": \"" + msg.ToYAMLString() + "\"";
-				s += "}";
+			string s = "{";
+			s += "\"op\": \"" + operation + "\"";
+			s += "," + "\"type\": \"" + msg.GetType().ToString() + "\"";
+			s += "," + "\"msg\": \"" + msg.ToYAMLString() + "\"";
+			s += "}";
+
+			byte[] buffer = encoder.GetBytes(s);
+
+			string[] keys = _client.GetKeysArray();
+			foreach (string identifier in keys) {
+
+				NetworkStream stream = _client[identifier];
 				
-				//Debug.Log ("Sending " + s);
-				sessions.Broadcast(s);
+				if (stream != null && stream.CanWrite) {
+					stream.Write(buffer, 0 , buffer.Length);
+					stream.Flush();
+				}
 			}
 		}
 
-		public void Send(String identifier, String operation, COMMessage msg) {
-			if(_ws != null) {
+		public void Send(string identifier, String operation, COMMessage msg) {
+		
+			NetworkStream stream = _client[identifier];
 
-				WebSocketServiceManager services = _ws.WebSocketServices;
-
-				WebSocketServiceHost host = services["/"];
-
-				WebSocketSessionManager sessions = host.Sessions;
+			if (stream != null && stream.CanWrite) {
 
 				string s = "{";
 				s += "\"op\": \"" + operation + "\"";
@@ -226,8 +284,11 @@ namespace COMProtocolLib {
 				s += "," + "\"msg\": \"" + msg.ToYAMLString() + "\"";
 				s += "}";
 
-				//Debug.Log ("Sending " + s);
-				sessions.SendTo(identifier, s);
+
+				ASCIIEncoding encoder = new ASCIIEncoding();
+				byte[] buffer = encoder.GetBytes(s);
+				stream.Write(buffer, 0 , buffer.Length);
+				stream.Flush();
 			}
 		}
 
@@ -247,5 +308,82 @@ namespace COMProtocolLib {
 				}
 			}
 		}
+
+		string RandomString(int length, string alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+		{       
+			var outOfRange = Byte.MaxValue + 1 - (Byte.MaxValue + 1) % alphabet.Length;
+			
+			return string.Concat(
+				Enumerable
+				.Repeat(0, Int32.MaxValue)
+				.Select(e => RandomByte())
+				.Where(randomByte => randomByte < outOfRange)
+				.Take(length)
+				.Select(randomByte => alphabet[randomByte % alphabet.Length])
+				);
+		}
+		
+		byte RandomByte()
+		{
+			var randomizationProvider = new RNGCryptoServiceProvider ();
+
+			var randomBytes = new byte[1];
+			randomizationProvider.GetBytes(randomBytes);
+			return randomBytes.Single();
+		}
 	}
+}
+
+public class ConcurrentDictionary<tkey, tvalue>{
+	private readonly object syncLock = new object();
+	private Dictionary<tkey, tvalue> dict;
+	
+	public tvalue this[tkey key] {
+		get { lock (syncLock) { return dict[key]; } }
+		set { lock (syncLock) { dict[key] = value; } }
+	}
+	
+	public int Count
+	{
+		get
+		{
+			lock(syncLock)
+			{
+				return dict.Count;
+			}
+		}
+	}
+	
+	public bool ContainsKey(tkey item) { lock(syncLock) { return dict.ContainsKey(item); } }
+	
+	public ConcurrentDictionary()
+	{
+		this.dict = new Dictionary<tkey, tvalue>();
+	}
+	
+	public void Add(tkey key, tvalue val)
+	{
+		lock(syncLock)
+		{
+			dict.Add(key, val);
+		}
+	}
+	
+	public void Remove(tkey key)
+	{
+		lock(syncLock)
+		{
+			dict.Remove(key);
+		}
+	}
+	
+	public void Clear()
+	{
+		lock(syncLock)
+		{
+			dict.Clear();
+		}
+	}
+	
+	public tkey[] GetKeysArray() { lock(syncLock) { tkey[] result = new tkey[dict.Keys.Count]; dict.Keys.CopyTo(result, 0); return result; } }
 }

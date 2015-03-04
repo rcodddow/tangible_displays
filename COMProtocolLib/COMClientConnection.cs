@@ -2,9 +2,6 @@
 using System.Threading;
 using System.Reflection;
 using System;
-using WebSocketSharp;
-using WebSocketSharp.Net;
-using WebSocketSharp.Server;
 using SimpleJSON;
 using UnityEngine;
 
@@ -75,9 +72,11 @@ namespace COMProtocolLib {
 			_port = 9090;
 			_myThread = null;
 			_delegates = new List<Action<string, COMMessage>> ();
+
+			webSocketConnection = new AndroidJavaClass ("com.proj.plugin.WebSocketConnection");
 		}
 
-		private WebSocket _ws;
+		private AndroidJavaObject webSocketConnection;
 
 		private System.Threading.Thread _myThread;
 		
@@ -94,7 +93,9 @@ namespace COMProtocolLib {
 			set {
 				if (value != _host) {
 					if (_myThread != null && _myThread.IsAlive == true) {
-						Disconnect();
+						if (webSocketConnection != null) {
+							webSocketConnection.Call("close");
+						}
 					}
 				}
 			}
@@ -108,7 +109,9 @@ namespace COMProtocolLib {
 			set {
 				if (value != _port) {
 					if (_myThread != null && _myThread.IsAlive == true) {
-						Disconnect();
+						if (webSocketConnection != null) {
+							webSocketConnection.Call("close");
+						}
 					}
 				}
 			}
@@ -140,19 +143,25 @@ namespace COMProtocolLib {
 		public void Disconnect() {
 			if (_myThread != null && _myThread.IsAlive == true) {
 				_myThread.Abort ();
-				_ws.Close ();
+				if (webSocketConnection != null) {
+					webSocketConnection.Call("close");
+				}
 			} else {
 				Debug.Log ("Cannot disconnect, because there is no active connection");
 			}
 		}
 
 		private void Run() {
-			_ws = new WebSocket(_host + ":" + _port);
-			_ws.OnMessage += (sender, e) => this.OnMessage(e.Data);
-			_ws.Connect();
+
+			if (webSocketConnection != null) {
+				webSocketConnection.Call("connect", new object[] { _host, _port });
+			}
 
 			while(true) {
-				Thread.Sleep (10000);
+				string msg = null;
+				while ((msg = webSocketConnection.Call<string>("getNextMessage")) != null) {
+					OnMessage(msg);
+				}
 			}
 		}
 
@@ -206,7 +215,7 @@ namespace COMProtocolLib {
 		}
 
 		public void Send(String operation, COMMessage msg) {
-			if(_ws != null) {
+			if(webSocketConnection != null) {
 
 				string s = "{";
 				s += "\"op\": \"" + operation + "\"";
@@ -214,8 +223,9 @@ namespace COMProtocolLib {
 				s += "," + "\"msg\": \"" + msg.ToYAMLString() + "\"";
 				s += "}";
 
-				//Debug.Log ("Sending " + s);
-				_ws.Send (s);
+				if (webSocketConnection != null) {
+					webSocketConnection.Call("send", new object[] { s });
+				}
 			}
 		}
 	}
