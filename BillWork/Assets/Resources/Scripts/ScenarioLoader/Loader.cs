@@ -26,5 +26,4 @@ public class ScenarioLoader {
 		textReader.Close();
 	}
 
-	public 
 }
