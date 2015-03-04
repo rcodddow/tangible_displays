@@ -11,6 +11,7 @@ public class UTIL_Scripts:MonoBehaviour{
 	public UI_ObjectMenuHandler ui_ObjectMenuHandler;
 	public IN_InputHandler in_InputHandler;
 	public CAM_Camera cam_Camera;
+	public NET_Handler net_Handler;
 
 	void Start(){
 	}
