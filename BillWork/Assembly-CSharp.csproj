@@ -55,11 +55,14 @@
      <Compile Include="Assets\Resources\Scripts\IN_InputHandler.cs" />
      <Compile Include="Assets\Resources\Scripts\MainHandler.cs" />
      <Compile Include="Assets\Resources\Scripts\Messages\CameraPoseMsg.cs" />
+     <Compile Include="Assets\Resources\Scripts\NET_Handler.cs" />
+     <Compile Include="Assets\Resources\Scripts\NET_TableState.cs" />
      <Compile Include="Assets\Resources\Scripts\ScencarioManager.cs" />
      <Compile Include="Assets\Resources\Scripts\UIHandler.cs" />
      <Compile Include="Assets\Resources\Scripts\UI_DebugMenuHandler.cs" />
      <Compile Include="Assets\Resources\Scripts\UI_LayersMenuHandler.cs" />
      <Compile Include="Assets\Resources\Scripts\UI_ObjectMenuHandler.cs" />
+     <Compile Include="Assets\Resources\Scripts\UI_ScopeHandler.cs" />
      <Compile Include="Assets\Resources\Scripts\UTIL_Scripts.cs" />
      <Compile Include="Assets\Resources\Scripts\UTIL_ToggleFader.cs" />
      <Compile Include="Assets\Resources\Scripts\UTIL_UVMover.cs" />
