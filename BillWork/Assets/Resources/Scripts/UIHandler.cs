@@ -10,11 +10,12 @@ using UnityEngine.UI;
 public class UIHandler:MonoBehaviour{
 	//Canvas Groups
 	public GameObject MenuToolbar;
-	public GameObject MainMenu;		//Shows the main menu options such as Reset.
-	public GameObject DebugMenu;	//Shows debug info such as FPS.
-	public GameObject CameraMenu;	//Shows camera controls.
-	public GameObject LayersMenu;	//Shows a list of objects to show and hide.
-	public GameObject ObjectMenu;	//Shows information about the selected object.
+	public GameObject MainMenu;			//Shows the main menu options such as Reset.
+	public GameObject DebugMenu;		//Shows debug info such as FPS.
+	public GameObject CameraMenu;		//Shows camera controls.
+	public GameObject ObjectMenu;		//Shows a list of controls for manipulating the object.
+	public GameObject LayersMenu;		//Shows a list of objects to show and hide.
+	public GameObject ObjectInfoMenu;	//Shows information about the selected object.
 	
 	public UTIL_Scripts scripts;
 
@@ -26,7 +27,7 @@ public class UIHandler:MonoBehaviour{
 
 	public void SelectObject(GameObject _object){
 		//An object has been selected. Show the ObjectMenu.
-		UTIL_Utilities.ShowHideCanvasGroup(ObjectMenu, true, true, true);
+		UTIL_Utilities.ShowHideCanvasGroup(ObjectInfoMenu, true, true, true);
 	}
 
 	private void HideGroups(int _group){
@@ -34,6 +35,7 @@ public class UIHandler:MonoBehaviour{
 		if(_group==1){	//MainMenu, CameraMenu, LayersMenu
 			UTIL_Utilities.ShowHideCanvasGroup(MainMenu,false,false,false);
 			UTIL_Utilities.ShowHideCanvasGroup(CameraMenu,false,false,false);
+			UTIL_Utilities.ShowHideCanvasGroup(ObjectMenu,false,false,false);
 			UTIL_Utilities.ShowHideCanvasGroup(LayersMenu,false,false,false);
 		}
 	}
@@ -57,21 +59,24 @@ public class UIHandler:MonoBehaviour{
 			UTIL_Utilities.ShowHideCanvasGroup(CameraMenu,false,false,false);
 		}
 		else{
-			scripts.in_InputHandler.SetInState(IN_STATE.UI);
+			scripts.in_InputHandler.SetInState(IN_STATE.CAMERA);
 			HideGroups(1);
 			UTIL_Utilities.ShowHideCanvasGroup(CameraMenu, true, true, true);
 		}
-		scripts.in_InputHandler.SetInState(IN_STATE.CAMERA);	//Set the input state to CAMERA.
+		//scripts.in_InputHandler.SetInState(IN_STATE.NONE);	//Set the input state to NONE.
 	}
-	public void Button_Select(){
-		//Select button hit.
-		//If not in selecting mode, go into selecting mode.
-		if(scripts.in_InputHandler.inState!=IN_STATE.SELECTING) scripts.in_InputHandler.SetInState(IN_STATE.SELECTING);
-		else{	//If already in selecting mode, get out of it.
-			scripts.in_InputHandler.SetInState(IN_STATE.NONE);
-			scripts.in_InputHandler.DeselectObject();
-			UTIL_Utilities.ShowHideCanvasGroup(ObjectMenu, false, false, false);
+	public void Button_Object(){
+		//Object menu button hit.
+		if(ObjectMenu.GetComponent<CanvasGroup>().alpha==1){
+			scripts.in_InputHandler.SetInState(IN_STATE.UI);
+			UTIL_Utilities.ShowHideCanvasGroup(ObjectMenu,false,false,false);
 		}
+		else{
+			scripts.in_InputHandler.SetInState(IN_STATE.OBJECT);
+			HideGroups(1);
+			UTIL_Utilities.ShowHideCanvasGroup(ObjectMenu, true, true, true);
+		}
+		//scripts.in_InputHandler.SetInState(IN_STATE.NONE);	//Set the input state to NONE.
 	}
 	public void Button_Layers(){
 		//Layers button hit.
@@ -118,5 +123,22 @@ public class UIHandler:MonoBehaviour{
 	public void Button_Focus(){
 		//Focus button hit. Center the camera on the currently selected object.
 		scripts.cam_Camera.Focus();
+	}
+	//ObjectMenu
+	public void Button_ObjectMenu_Select(){
+		//Select button hit.
+		//If not in selecting mode, go into selecting mode.
+		if(scripts.ui_ObjectMenuHandler.objMenuState!=OBJ_MENU_STATE.SELECTING) scripts.ui_ObjectMenuHandler.SetObjectMenuState(OBJ_MENU_STATE.SELECTING);
+		else{	//If already in selecting mode, get out of it.
+			scripts.ui_ObjectMenuHandler.SetObjectMenuState(OBJ_MENU_STATE.NONE);
+			UTIL_Utilities.ShowHideCanvasGroup(ObjectInfoMenu, false, false, false);
+		}
+	}
+	public void Button_ObjectMenu_Rotate(){
+		//Rotate button hit. Able to rotate the object.
+		if(scripts.ui_ObjectMenuHandler.objMenuState!=OBJ_MENU_STATE.ROTATING) scripts.ui_ObjectMenuHandler.SetObjectMenuState(OBJ_MENU_STATE.ROTATING);
+		else{	//If already in rotating mode, get out of it.
+			scripts.ui_ObjectMenuHandler.SetObjectMenuState(OBJ_MENU_STATE.NONE);
+		}
 	}
 }

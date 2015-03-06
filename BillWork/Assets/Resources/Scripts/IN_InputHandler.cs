@@ -7,22 +7,53 @@ using System.Collections;
 
 public enum IN_STATE{	//The different states of the input.
 	UI,					//Interacting with the UI.
-	SELECTING,			//Touching an object to select it.
+	OBJECT,				//Interacting with the object.
 	CAMERA,				//Touching the screen to control the camera.
 	NONE
 };
 
+public class IN_FRAME{
+	//Simple container for keeping the current input state for the frame.
+	public IN_FRAME(){
+		isInput=false;
+		isTouch=false;
+		deltaPos=Vector2.zero;
+	}
+
+	public void Update(){
+		//Check if there's any input.
+		if((!Input.GetMouseButton(0))&&(!Input.GetMouseButton(1))&&(Input.touchCount==0)) isInput=false;
+		else isInput=true;
+
+		//Check if there's any touches.
+		if(Input.touchCount>0) isTouch=true;
+		else isTouch=false;
+
+		//Set deltaPos.
+		if(isTouch) deltaPos=Input.GetTouch(0).deltaPosition;
+		else deltaPos=new Vector2(Input.GetAxis("Mouse X"),Input.GetAxis("Mouse Y"));
+	}
+
+	//Variables
+	public bool isInput;		//Any input is currently happening.
+	public bool isTouch;		//Is touching the screen or not.
+	public Vector2 deltaPos;	//Delta position of the primary touch or mouse.
+}
+
 public class IN_InputHandler:MonoBehaviour{
+	public UTIL_Scripts scripts;
 	public IN_STATE inState;			//The current state of the input. Denotes what touching the game world performs.
 	public GameObject selectedObject;	//The currently selected object.
-	public UTIL_Scripts scripts;
+	public IN_FRAME inFrame;			//The current input state for this frame.
 
 	void Start(){
 		inState=IN_STATE.NONE;
 		selectedObject=null;
+		inFrame=new IN_FRAME();
 	}
 
 	void Update(){
+		inFrame.Update();
 		CheckTouch();
 	}
 
@@ -30,16 +61,18 @@ public class IN_InputHandler:MonoBehaviour{
 		//Check any new touches or mouse clicks.
 		if(Input.GetMouseButtonDown(0)){	//Left click.
 			switch(inState){
-				case IN_STATE.SELECTING:	//Trying to select an object.
-					RaycastHit rayHit;
-					Ray ray=Camera.main.ScreenPointToRay(Input.mousePosition);
-					if(Physics.Raycast(ray,out rayHit, Mathf.Infinity)){
-						GameObject _selectedObject=GetToggleableObject(rayHit.transform.gameObject);
-						if(_selectedObject!=null){	//Successfully clicked on a piece of the model.
-							if(selectedObject!=null) UTIL_Utilities.RemoveHighlight(selectedObject, true);
-							selectedObject=_selectedObject;
-							UTIL_Utilities.AddHighlight(selectedObject);
-							scripts.ui_ObjectMenuHandler.SelectObject(selectedObject);
+				case IN_STATE.OBJECT:	//Trying to select an object.
+					if(scripts.ui_ObjectMenuHandler.objMenuState==OBJ_MENU_STATE.SELECTING){
+						RaycastHit rayHit;
+						Ray ray=Camera.main.ScreenPointToRay(Input.mousePosition);
+						if(Physics.Raycast(ray,out rayHit, Mathf.Infinity)){
+							GameObject _selectedObject=GetToggleableObject(rayHit.transform.gameObject);
+							if(_selectedObject!=null){	//Successfully clicked on a piece of the model.
+								if(selectedObject!=null) UTIL_Utilities.RemoveHighlight(selectedObject, true);
+								selectedObject=_selectedObject;
+								UTIL_Utilities.AddHighlight(selectedObject);
+								scripts.ui_ObjectInfoMenuHandler.SelectObject(selectedObject);
+							}
 						}
 					}
 					break;
@@ -52,12 +85,13 @@ public class IN_InputHandler:MonoBehaviour{
 		inState=_inState;
 
 		if(inState!=IN_STATE.CAMERA) scripts.cam_Camera.SetCamInputState(CAM_INPUT_STATE.NONE);
+		if(inState!=IN_STATE.OBJECT) scripts.ui_ObjectMenuHandler.SetObjectMenuState(OBJ_MENU_STATE.NONE);
 	}
 	public void DeselectObject(){
 		//Deselects the current object.
 		if(selectedObject!=null) UTIL_Utilities.RemoveHighlight(selectedObject, true);
 		selectedObject=null;
-		scripts.ui_ObjectMenuHandler.DeselectObject();
+		scripts.ui_ObjectInfoMenuHandler.DeselectObject();
 	}
 
 	private GameObject GetToggleableObject(GameObject _object){

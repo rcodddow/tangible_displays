@@ -64,6 +64,7 @@
      <Compile Include="Assets\Resources\Scripts\UIHandler.cs" />
      <Compile Include="Assets\Resources\Scripts\UI_DebugMenuHandler.cs" />
      <Compile Include="Assets\Resources\Scripts\UI_LayersMenuHandler.cs" />
+     <Compile Include="Assets\Resources\Scripts\UI_ObjectInfoMenuHandler.cs" />
      <Compile Include="Assets\Resources\Scripts\UI_ObjectMenuHandler.cs" />
      <Compile Include="Assets\Resources\Scripts\UI_ScopeDebugMenuHandler.cs" />
      <Compile Include="Assets\Resources\Scripts\UI_ScopeHandler.cs" />
