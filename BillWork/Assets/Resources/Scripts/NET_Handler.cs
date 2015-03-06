@@ -13,6 +13,7 @@ public class NET_Handler : MonoBehaviour{
 	public UTIL_Scripts scripts;
 
 	void Start() {
+		currentTableMode="EYE";
 		tableState=new TableStateMsg(currentTableMode, transform.rotation);	//Create the TableState.
 		conn = COMServerConnection.Instance;
 		conn.Port = 9090;
