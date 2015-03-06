@@ -12,6 +12,7 @@ using System.Text;
 
 using SimpleJSON;
 using UnityEngine;
+using Messages;
 
 /**
  * This class handles the connection with the external ROS world, deserializing
@@ -37,20 +38,14 @@ namespace COMProtocolLib {
 	public class COMServerConnection {
 
 		private class RenderTask {
-			private COMServerDelegate _delegate;
 			private string _identifier;
 			private string _operation;
 			private COMMessage _msg;
 
-			public RenderTask(COMServerDelegate d, string id, string op, COMMessage msg) {
-				_delegate = d;
+			public RenderTask(string id, string op, COMMessage msg) {
 				_operation = op;
 				_identifier = id;
 				_msg = msg;
-			}
-
-			public COMServerDelegate getDelegate() {
-				return _delegate;
 			}
 
 			public COMMessage getMsg() {
@@ -121,10 +116,16 @@ namespace COMProtocolLib {
 
 		public void AddDelegate(COMServerDelegate d) {
 			_delegates.Add (d);
+
+			Debug.Log ("Added delegate");
 		}
 
 		public void RemoveDelegate(COMServerDelegate d) {
 			_delegates.Remove (d);
+		}
+
+		public int numberOfClients() {
+			return _client.Count;
 		}
 
 		/**
@@ -149,7 +150,7 @@ namespace COMProtocolLib {
 
 		private void ConnnectionListener() {
 
-			_server = new TcpListener(IPAddress.Parse("127.0.0.1"), _port);
+			_server = new TcpListener(IPAddress.Parse("192.168.1.23"), _port);
 			_server.Start();
 
 			while (true) {
@@ -164,11 +165,13 @@ namespace COMProtocolLib {
 			TcpClient tcpClient = (TcpClient)client;
 			NetworkStream clientStream = tcpClient.GetStream();
 
-			string identifier = RandomString(32); 
+			string identifier = Path.GetRandomFileName(); 
 
 			_client.Add (identifier, clientStream);
 
-			string message = "";
+			Debug.Log ("New Client "+identifier+" Connected");
+
+			string msg_fragments = "";
 			
 			int bytesRead;
 			byte[] buffer = new byte[4096];
@@ -176,37 +179,49 @@ namespace COMProtocolLib {
 			while (true)
 			{
 				bytesRead = 0;
-				
+
 				try {
 					//blocks until a client sends a message
 					bytesRead = clientStream.Read(buffer, 0, 4096);
 				} catch {
+					Debug.Log ("socket error");
 					//a socket error has occured
 					break;
 				}
 				
 				if (bytesRead == 0) {
+					Debug.Log ("client sent no bytes");
 					//the client has disconnected from the server
 					break;
 				}
 
-				int frag_size = 0;
-				while (frag_size < bytesRead) {
-					if (buffer[frag_size++] == '\n')
-						break;
-				}
+				try {
 
-				ASCIIEncoding encoder = new ASCIIEncoding();
-				message += encoder.GetString(buffer, 0, frag_size);
+					ASCIIEncoding encoder = new ASCIIEncoding();
+					msg_fragments += encoder.GetString(buffer, 0, bytesRead);
 
-				if (frag_size < bytesRead) { // recieved complete JSON string
-					OnMessage(message, identifier);
+					string[] msgs = msg_fragments.Split('\n');
 
-					if (bytesRead - frag_size > 1) {
-						message = encoder.GetString(buffer, frag_size, bytesRead - frag_size);
+					if (msg_fragments[msg_fragments.Length-1] == '\n') {
+						// n * complete messages in buffer
+						foreach (string message in msgs) {
+							OnMessage(message, identifier);
+						}
+						msg_fragments = "";
+
+					} else {
+						for (int i = 0; i < msgs.Length-1; i++) {
+							OnMessage(msgs[i], identifier);
+						}
+						msg_fragments = msgs[msgs.Length-1];
 					}
+
+				} catch (Exception e) {
+					Debug.Log(e);
 				}
 			}
+
+			Debug.Log ("Client "+identifier+" Disconnected");
 
 			_client.Remove (identifier);
 			
@@ -215,36 +230,54 @@ namespace COMProtocolLib {
 
 		private void OnMessage(string s, string id)
 		{
-			if ((s != null) && !s.Equals ("")) {
+			if (s != null && !s.Equals("") && _delegates.Count > 0) {
+
 				JSONNode node = JSONNode.Parse (s);
-				
+
+				if (node == null) {
+					Debug.Log ("Error processing string " + s);
+					return;
+				}
+
 				string operation = node["op"];
+
 				Type type = Type.GetType(node["type"]);
+
+				if (type == null) {
+					Debug.Log("could not find type : " + node["type"]);
+					return;
+				}
+
 				ConstructorInfo constructor = type.GetConstructor(new Type[] { typeof(JSONNode) });
-				
+
 				if (constructor == null) {
 					Debug.Log("could not find proper contruction in type : " + node["type"]);
 					return;
 				}
-				
-				foreach (COMServerDelegate _delegate in _delegates) {
-					COMMessage message = (COMMessage) constructor.Invoke(new object[] { node["msg"] });
-					AddTaskToQueue(new RenderTask (_delegate, id, operation, message));
-				}
+
+				COMMessage message = (COMMessage) constructor.Invoke(new object[] { node["msg"] });
+
+				Debug.Log("Adding Message to queue :" + message.ToYAMLString() + " size : " + _taskQ.Count);
+
+				AddTaskToQueue(new RenderTask (id, operation, message));
 			}
 		}
 
-		public void Render() {
-			RenderTask newTask = null;
-			lock (_queueLock) {
-				if(_taskQ.Count > 0) {
-					newTask = _taskQ[0];
-					_taskQ.RemoveAt (0);
+		public void Dequeue(int num) {
+			for (int i = 0; i < num; i++) {
+				RenderTask newTask = null;
+				lock (_queueLock) {
+					if (_taskQ.Count > 0) {
+						newTask = _taskQ [0];
+						_taskQ.RemoveAt (0);
+					}
 				}
-			}
-			if (newTask != null) {
-				COMServerDelegate _delegate = newTask.getDelegate();
-				_delegate.OnMessage(newTask.getIdentifier(), newTask.getOperation(), newTask.getMsg());
+				if (newTask != null) {
+					Debug.Log ("server task");
+					foreach (COMServerDelegate _delegate in _delegates) {
+							_delegate.OnMessage (newTask.getIdentifier (), newTask.getOperation (), newTask.getMsg ());
+					}
+				}
 			}
 		}
 
@@ -255,8 +288,7 @@ namespace COMProtocolLib {
 			string s = "{";
 			s += "\"op\": \"" + operation + "\"";
 			s += "," + "\"type\": \"" + msg.GetType().ToString() + "\"";
-			s += "," + "\"msg\": \"" + msg.ToYAMLString() + "\"";
-			s += "}";
+			s += "," + "\"msg\": " + msg.ToYAMLString() + "}\n";
 
 			byte[] buffer = encoder.GetBytes(s);
 
@@ -266,8 +298,12 @@ namespace COMProtocolLib {
 				NetworkStream stream = _client[identifier];
 				
 				if (stream != null && stream.CanWrite) {
-					stream.Write(buffer, 0 , buffer.Length);
-					stream.Flush();
+					try {
+						stream.Write(buffer, 0 , buffer.Length);
+						stream.Flush();
+					} catch (SocketException e) {
+						Debug.Log(e);
+					}
 				}
 			}
 		}
@@ -281,14 +317,15 @@ namespace COMProtocolLib {
 				string s = "{";
 				s += "\"op\": \"" + operation + "\"";
 				s += "," + "\"type\": \"" + msg.GetType().ToString() + "\"";
-				s += "," + "\"msg\": \"" + msg.ToYAMLString() + "\"";
-				s += "}";
-
+				s += "," + "\"msg\": " + msg.ToYAMLString() + "}\n";
 
 				ASCIIEncoding encoder = new ASCIIEncoding();
 				byte[] buffer = encoder.GetBytes(s);
-				stream.Write(buffer, 0 , buffer.Length);
-				stream.Flush();
+				try {
+					stream.Write(buffer, 0 , buffer.Length);
+					stream.Flush();
+				} catch (SocketException e) {
+				}
 			}
 		}
 
@@ -296,40 +333,20 @@ namespace COMProtocolLib {
 			lock(_queueLock) {
 				bool found = false;
 				for(int i=0;i<_taskQ.Count;i++) {
-					if(_taskQ[i].getOperation().Equals (newTask.getOperation())) {
+					if(_taskQ[i].getOperation().Equals (newTask.getOperation()) &&
+					   _taskQ[i].getIdentifier().Equals (newTask.getIdentifier())) {
 						_taskQ.RemoveAt (i);
 						_taskQ.Insert (i, newTask);
+						Debug.Log ("replace old message");
 						found = true;
 						break;
 					}
 				}
 				if(!found) {
+					Debug.Log ("add new message");
 					_taskQ.Add (newTask);
 				}
 			}
-		}
-
-		string RandomString(int length, string alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-		{       
-			var outOfRange = Byte.MaxValue + 1 - (Byte.MaxValue + 1) % alphabet.Length;
-			
-			return string.Concat(
-				Enumerable
-				.Repeat(0, Int32.MaxValue)
-				.Select(e => RandomByte())
-				.Where(randomByte => randomByte < outOfRange)
-				.Take(length)
-				.Select(randomByte => alphabet[randomByte % alphabet.Length])
-				);
-		}
-		
-		byte RandomByte()
-		{
-			var randomizationProvider = new RNGCryptoServiceProvider ();
-
-			var randomBytes = new byte[1];
-			randomizationProvider.GetBytes(randomBytes);
-			return randomBytes.Single();
 		}
 	}
 }

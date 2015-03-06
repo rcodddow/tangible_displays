@@ -47,7 +47,6 @@
   </ItemGroup>
   <ItemGroup>
      <Compile Include="Assets\Resources\Scripts\CAM_Camera.cs" />
-     <Compile Include="Assets\Resources\Scripts\COMProtocolLib\COMClientConnection.cs" />
      <Compile Include="Assets\Resources\Scripts\COMProtocolLib\COMMessage.cs" />
      <Compile Include="Assets\Resources\Scripts\COMProtocolLib\COMServerConnection.cs" />
      <Compile Include="Assets\Resources\Scripts\COMProtocolLib\COMServerDelegate.cs" />
@@ -55,6 +54,8 @@
      <Compile Include="Assets\Resources\Scripts\IN_InputHandler.cs" />
      <Compile Include="Assets\Resources\Scripts\MainHandler.cs" />
      <Compile Include="Assets\Resources\Scripts\Messages\CameraPoseMsg.cs" />
+     <Compile Include="Assets\Resources\Scripts\Messages\TableStateMsg.cs" />
+     <Compile Include="Assets\Resources\Scripts\NET_Handler.cs" />
      <Compile Include="Assets\Resources\Scripts\ScenarioLoader\Loader.cs" />
      <Compile Include="Assets\Resources\Scripts\ScenarioLoader\POCSO\Capability.cs" />
      <Compile Include="Assets\Resources\Scripts\ScenarioLoader\POCSO\Model.cs" />

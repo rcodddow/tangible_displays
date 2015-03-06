@@ -12,6 +12,7 @@ public enum GAME_MODE{
 };
 
 public class MainHandler:MonoBehaviour {
+	public UTIL_Scripts scripts;
 	public GAME_MODE gameMode;		//The current game mode.
 	public CanvasGroup CG_MainUI;	//The main game UI.
 	public CanvasGroup CG_ScopeUI;	//The scope activity UI.
@@ -27,10 +28,12 @@ public class MainHandler:MonoBehaviour {
 		gameMode=_gameMode;
 
 		if(gameMode==GAME_MODE.GAME){	//Switch to the main game.
+			scripts.netHandler.currentTableMode="EYE";
 			UTIL_Utilities.ShowHideCanvasGroup(CG_MainUI, true, true, true);
 			UTIL_Utilities.ShowHideCanvasGroup(CG_ScopeUI, false, false, false);
 		}
 		else if(gameMode==GAME_MODE.SCOPE){	//Switch to the scope mode.
+			scripts.netHandler.currentTableMode="SCOPE";
 			UTIL_Utilities.ShowHideCanvasGroup(CG_MainUI, false, false, false);
 			UTIL_Utilities.ShowHideCanvasGroup(CG_ScopeUI, true, true, true);
 		}
