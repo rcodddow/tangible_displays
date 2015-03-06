@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<QCARConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="qcar_config.xsd">
+  <Tracking>
+    <ImageTarget name="t12" size="20.500000 26.529411" />
+    <ImageTarget name="t11" size="20.500000 26.529411" />
+    <ImageTarget name="t10" size="20.500000 26.529411" />
+    <ImageTarget name="t9" size="20.500000 26.529411" />
+    <ImageTarget name="t7" size="20.500000 26.529411" />
+    <ImageTarget name="t8" size="20.500000 26.529411" />
+    <ImageTarget name="side2" size="20.059999 25.959999" />
+    <ImageTarget name="side1" size="20.600000 27.466667" />
+    <ImageTarget name="targetC" size="12.400000 6.452032" />
+    <ImageTarget name="targetB" size="12.500000 6.504065" />
+    <ImageTarget name="targetA" size="12.500000 6.504065" />
+    <ImageTarget name="wideforest" size="25.400000 6.350000" />
+    <ImageTarget name="widestones" size="25.400000 7.461444" />
+    <ImageTarget name="extended" size="25.299999 6.325000" />
+    <MultiTarget name="TableTop">
+      <Part name="t8" translation="0 13.1 -10" rotation="AD: 0 1 0 -90"/>
+      <Part name="t9" translation="0 46.7 -10" rotation="AD: 0 1 0 -90"/>
+      <Part name="side1" translation="81.0 0.0 -14.0" rotation="AD: 1 0 0 90"/>
+      <Part name="side2" translation="10.0 0.0 -12.8" rotation="AD: 1 0 0 90"/>
+      <Part name="targetA" translation="18.75 3 0" rotation="AD: 1 0 0 0"/>
+      <Part name="targetB" translation="75 3 0" rotation="AD: 0 0 1 180"/>
+      <Part name="extended" translation="45.7 3 0" rotation="AD: 1 0 0 0"/>
+      <Part name="targetC" translation="88.4 16.4 0" rotation="AD: 0 0 1 90"/>
+      <Part name="widestones" translation="50 58 0" rotation="AD: 1 0 0 0"/>
+      <Part name="wideforest" translation="3.4 28.9 0" rotation="AD: 0 0 1 90"/>
+    </MultiTarget>
+  </Tracking>
+</QCARConfig>

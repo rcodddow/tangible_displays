@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<QCARConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="qcar_config.xsd">
+  <Tracking>
+    <ImageTarget name="t14" size="15.000000 15.000000" />
+    <ImageTarget name="t13" size="15.000000 15.000000" />
+    <ImageTarget name="t12" size="20.500000 26.529411" />
+    <ImageTarget name="t11" size="20.500000 26.529411" />
+    <ImageTarget name="t10" size="20.500000 26.529411" />
+    <ImageTarget name="t9" size="20.500000 26.529411" />
+    <ImageTarget name="t7" size="20.500000 26.529411" />
+    <ImageTarget name="t8" size="20.500000 26.529411" />
+    <ImageTarget name="side2" size="20.059999 25.959999" />
+    <ImageTarget name="side1" size="20.600000 27.466667" />
+<MultiTarget name="TableTop">
+      <Part name="t12" translation="91 13.1 -10" rotation="AD: 0 1 0 90"/>
+      <Part name="t13" translation="7.5 7.5 0" rotation="AD: 0 1 0 0"/>
+      <Part name="t14" translation="83.5 7.5 0" rotation="AD: 0 1 0 0"/>
+      <Part name="t8" translation="0 13.1 -10" rotation="AD: 0 1 0 -90"/>
+      <Part name="t9" translation="0 46.7 -10" rotation="AD: 0 1 0 -90"/>
+      <Part name="side1" translation="81.0 0.0 -14.0" rotation="AD: 1 0 0 90"/>
+      <Part name="side2" translation="10.0 0.0 -12.8" rotation="AD: 1 0 0 90"/>
+    </MultiTarget>
+
+  </Tracking>
+</QCARConfig>
